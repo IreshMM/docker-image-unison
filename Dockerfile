@@ -4,12 +4,6 @@ FROM $BASE_IMAGE
 ARG OCAML_VERSION=4.12.0
 ARG UNISON_VERSION=2.52.1
 
-ENV UNISON_ARGS ''
-ENV UNISON_WATCH_ARGS ''
-ENV APP_VOLUME '/app_sync'
-ENV UNISON_SRC '/app_sync'
-ENV UNISON_DEST '/host_sync'
-
 RUN apk update \
     && apk add --no-cache --virtual .build-deps build-base curl git build-base coreutils \
     && curl -L http://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION:0:4}/ocaml-${OCAML_VERSION}.tar.gz --output -  | tar zxv -C /tmp \
@@ -43,25 +37,4 @@ ENV TZ="Europe/Berlin" \
     UNISON_DIR="/data" \
     HOME="/root"
 
-COPY entrypoint.sh /entrypoint.sh
-COPY precopy_appsync.sh /usr/local/bin/precopy_appsync
-COPY monitrc /etc/monitrc
-
-RUN mkdir -p /docker-entrypoint.d \
-    && chmod +x /entrypoint.sh \
-    && mkdir -p /etc/supervisor.conf.d \
-    && mkdir /unison \
-    && chmod +x /usr/local/bin/precopy_appsync \
-    && chmod u=rw,g=,o= /etc/monitrc
-
-COPY supervisord.conf /etc/supervisord.conf
-COPY supervisor.daemon.conf /etc/supervisor.conf.d/supervisor.daemon.conf
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["supervisord"]
-############# ############# #############
-############# /SHARED     / #############
-############# ############# #############
-
-VOLUME /unison
-EXPOSE 5000
+ENTRYPOINT ["/usr/local/bin/unison"]
